@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
+</head>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+        }
+        .wrapper {
+            width: 900px;
+            height: 600px;
+            border: 1px solid black;
+            overflow: hidden;
+            margin: 100px auto 0px auto;
+            position: relative;
+        }
+        .wrapper  ul{
+            display: block;
+            position: relative;
+        }
+        .wrapper ul li {
+            float: left;
+            width: 900px;
+            height: 600px;
+            display: block;
+        }
+        .wrapper ul li img {
+            width: 100%;
+            height: 100%;
+        }
+        .wrapper .btn {
+            
+            width: 100px;
+            height: 60px;
+            background: #000;
+            opacity: 0.3;
+            position: absolute;
+            top: 50%;
+            margin-top: -25px;
+            line-height: 60px;
+            color: #fff;
+            text-align: center;
+            cursor: pointer;
+            
+        }
+        .wrapper .leftBtn {
+            left: 20px;
+        }
+        .wrapper .rightBtn {
+            right: 20px;
+        }
+        .wrapper .btn:hover {
+            opacity: 0.8;
+        }
+        .wrapper .sliderIndex {
+            position: absolute;
+            bottom: 30px;
+            text-align: center;
+            width: 100%;
+            
+        }
+        .wrapper .sliderIndex span {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: deepskyblue;
+            margin-left: 15px;
+            cursor: pointer;
+        }
+        .wrapper .sliderIndex .active {
+            background: #f40;
+        }
+    </style>
+<body>
+    <div class="wrapper">
+        <ul id="oUl" style="width:0px;">
+        </ul>
+        <div class='btn leftBtn' id="leftBtn">&lt;</div> 
+        <div class='btn rightBtn' id="rightBtn">&gt;</div>
+        <div class="sliderIndex" id="sliderIndex"></div>
+    </div>
+    <script>//生成功能
+        var imgNum = window.prompt('请输入您要生成轮播图的图片数量');
+        imgNum++;
+        oUl.style.width = 900 * imgNum + 'px';
+        var innerHTMLstr = '';
+        for (var i = 0;i < imgNum;i++) {
+            innerHTMLstr += '<li><img src=""></li>'
+        }
+        oUl.innerHTML = innerHTMLstr;
+        oUl.style.left = 0 + 'px';
+        var imgArr = document.getElementsByTagName('img');
+        for (var i = 0; i < imgArr.length;i++) {
+            if (i != imgArr.length - 1) {
+                imgArr[i].src = window.prompt('请您为第' + (i + 1) + '个图片输入网络地址或相对地址');
+            }else {
+                imgArr[i].src = imgArr[0].src;
+            }
+        }
+        var innerHTMLstrs = '';
+        for (var i = 0; i < imgNum - 1;i++) {
+            if (i == 0) {
+                innerHTMLstrs += '<span class="active"></span>';
+            }else {
+                innerHTMLstrs += '<span class=""></span>';
+            }
+        }
+        //运动框架
+        function getStyle (obj,attr) {
+            if (obj.currentStyle) {
+                return obj.currentStyle[attr];
+            }else {
+                return window.getComputedStyle(obj,false)[attr];
+            }
+        }
+        function startMove (obj, data, func) {
+            clearInterval(obj.timer);
+            var iSpeed;
+            var iCur;
+            var name;
+            startTimer = obj.timer = setInterval(function () {
+                var bStop = true;
+                for (var attr in data) {
+                    if (attr === 'opacity') {
+                        name = attr;
+                        iCur = parseFloat(getStyle(obj,attr)) * 100;
+                    }else {
+                        iCur = parseInt(getStyle(obj,attr));
+                    }
+                    iSpeed = ( data[attr] - iCur) / 8;
+                    if (iSpeed > 0) {
+                        iSpeed = Math.ceil(iSpeed);
+                    }else {
+                        iSpeed = Math.floor(iSpeed);
+                    }
+                    if (attr === 'opacity') {
+                        obj.style.opacity = ( iCur + iSpeed ) / 100;
+                    }else {
+                        obj.style[attr] = iCur + iSpeed + 'px';
+                    }
+                    if ( Math.floor(Math.abs(data[attr] - iCur)) != 0 ) {
+                        bStop = false;
+                    }
+                }
+                if (bStop) {
+                    clearInterval(obj.timer);
+                    if (name === 'opacity') {
+                        obj.style.opacity = data[name] / 100;
+                    }
+                    func();
+                }
+            },30);
+        }
+        //运动
+        var timer = null;
+        var moveWidth = oUl.children[0].offsetWidth;
+        var oBtnLeft = document.getElementById('leftBtn');
+        var oBtnRight = document.getElementById('rightBtn');
+        var locked = true;
+        var index = 0;
+        var num = oUl.children.length - 1;
+        sliderIndex.innerHTML = innerHTMLstrs;
+        var oIndexArr = sliderIndex.getElementsByTagName('span');
+        oBtnLeft.onclick = function () {
+            autoMove('rightLeft');
+        }
+        oBtnRight.onclick = function () {
+            autoMove('leftRight');
+        }
+        for (var i = 0; i < oIndexArr.length; i++) {
+            (function (myindex) {
+                oIndexArr[i].onclick = function () {
+                    clearTimeout(timer);
+                    locked = false;
+                    index = myindex;
+                    changeIndex(index);
+                    startMove(oUl,{left: -myindex * moveWidth},function () {
+                        locked = true;
+                        timer = setTimerout(autoMove, 3000);
+                    });
+                }
+            })(i)
+            
+        }
+        function autoMove (direction) {
+            if (locked) {
+                
+                    locked = false;
+                    clearTimeout(timer);
+                if (!direction || direction === 'leftRight') {
+                    index++;
+                    startMove(oUl,{left:oUl.offsetLeft - moveWidth},function () {
+                        if (oUl.offsetLeft === -num * moveWidth) {
+                            oUl.style.left = '0px';
+                            index = 0;
+                        }
+                        changeIndex(index);
+                        timer = setTimeout(autoMove, 3000);
+                        locked = true;
+                    });
+                }else if (direction === 'rightLeft') {
+                    if (oUl.offsetLeft === 0) {
+                        oUl.style.left = -num * moveWidth + 'px';
+                        index = num;
+                    }
+                    index--;
+                    startMove(oUl,{left: oUl.offsetLeft + moveWidth},function () {
+                        changeIndex(index);
+                        timer = setTimeout(autoMove, 3000);
+                        locked = true;
+                    })
+                }
+            }
+        }
+        function changeIndex(index) {
+            for (var i = 0; i < oIndexArr.length; i++) {
+                oIndexArr[i].className = '';
+            }
+            oIndexArr[index].className = 'active';
+        }
+        timer = setTimeout(autoMove,3000);
+
+    </script>
+</body>
+</html>
